@@ -99,6 +99,16 @@ class PGUuidConverter(dbapiprovider.UuidConverter):
     def py2sql(converter, val):
         return val
 
+class PGArrayConverter(dbapiprovider.Converter):
+    if PY2:
+        def sql2py(self, val):
+            if val:
+                return [v.decode('utf-8') if isinstance(v, str) else v for v in val]
+            return val
+
+    def sql_type(self):
+        return 'TEXT[]'
+
 class PGPool(Pool):
     def _connect(pool):
         pool.con = pool.dbapi_module.connect(*pool.args, **pool.kwargs)
@@ -239,6 +249,7 @@ class PGProvider(DBAPIProvider):
         (timedelta, PGTimedeltaConverter),
         (UUID, PGUuidConverter),
         (buffer, PGBlobConverter),
+        (list, PGArrayConverter),
     ]
 
 provider_cls = PGProvider
